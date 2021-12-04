@@ -1,8 +1,14 @@
 // const http = require('http')
 import http from 'http';
 import formidable from 'formidable';
+import fs from 'fs'
+import fetch from 'node-fetch';
 
+
+const highWaterMark = 10 * 1024
+const encoding = 'utf-8'
 const PORT = 5000
+
 const server = http.createServer((req, res) => {
   // res.writeHead(200, { 'Content-type': 'text/html; charset=utf-8' })
   // if (req.url === '/api/spell') {
@@ -20,6 +26,23 @@ const server = http.createServer((req, res) => {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify('error type'));
       }
+
+      // fs.readFile(file.filepath, 'utf-8', (e, data) => {
+      //   console.log(data);
+      // })
+
+      const stream = fs.createReadStream(file.filepath, { encoding, highWaterMark })
+      stream.on('data', (chank) => {
+        console.log(chank);
+        // fetch('https://github.com/')
+        //   .then(res => res.text())
+        //   .then(body => console.log(body));
+        // console.log(res);
+      })
+      stream.on('error', (e) => {
+        console.log(e);
+      })
+
     })
     form.parse(req, (err, fields, files) => {
       if (err) {
@@ -27,6 +50,7 @@ const server = http.createServer((req, res) => {
         res.end(String(err));
         return;
       }
+
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ fields, files }, null, 2));
     });
