@@ -13,7 +13,17 @@ const emitter = new EventEmitter()
 const form = formidable();
 
 const server = http.createServer((req, res) => {
-
+  //CORS
+  const headers = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "OPTIONS, POST, GET",
+    "Access-Control-Max-Age": 2592000, // 30 days
+  };
+  if (req.method === "OPTIONS") {
+    res.writeHead(204, headers);
+    res.end();
+    return;
+  }
   if (req.url === '/api/upload' && req.method?.toLowerCase() === 'post') {
     // parse a file upload
     form.on('file', async function (name, file) {
