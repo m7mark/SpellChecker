@@ -60,10 +60,11 @@ const server = http.createServer((req, res) => {
       emitter.once('upload', () => {
         const filePath = 'files/final.txt'
         if (fs.existsSync(filePath)) {
+          res.writeHead(200, headers);
           fs.createReadStream('files/final.txt').pipe(res)
           return
         }
-        res.writeHead(200, { 'Content-Type': 'text/plane' });
+        res.writeHead(200, headers);
         res.end('Error sending file');
       });
     });
