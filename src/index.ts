@@ -58,7 +58,7 @@ const server = http.createServer((req, res) => {
       });
     });
   }
-  else {res.end()}
+  else { res.end() }
 })
 
-server.listen(PORT, () => console.log(`server start on ${PORT}`))
+server.listen(process.env.PORT || PORT, () => console.log(`server start on ${PORT}`))
