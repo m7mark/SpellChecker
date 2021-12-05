@@ -58,7 +58,14 @@ const server = http.createServer((req, res) => {
       });
     });
   }
-  else { res.end() }
+  else {
+    //front page. If want empty res just add res.end()
+    const filePath = 'frontPage/src/index.js'
+    if (fs.existsSync(filePath)) {
+      fs.createReadStream(filePath).pipe(res)
+    }
+    else { res.end() }
+  }
 })
 
 server.listen(process.env.PORT || PORT, () => console.log(`server start on ${PORT}`))

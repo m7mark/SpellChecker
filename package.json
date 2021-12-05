@@ -5,6 +5,7 @@
   "main": "src/index.ts",
   "scripts": {
     "start": "ts-node src/index.ts",
+    "heroku-postbuild": "cd frontPage && yarn install && yarn run build",
     "dev": "ts-node-dev src/index.ts"
   },
   "author": "Mark",
