@@ -1,8 +1,9 @@
-import { Upload, Button, message } from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
+import { Upload, message } from 'antd';
+import { InboxOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { saveAs } from 'file-saver';
 
+const { Dragger } = Upload;
 const BASE_URL = process.env.REACT_APP_SERVER_API
 const instanceReq = axios.create({
   baseURL: BASE_URL
@@ -17,10 +18,8 @@ const UploadForm = () => {
     })
     const file = new File([newText.data], "new.txt", { type: "text/plain;charset=utf-8" });
     saveAs(file);
-    // message.success(`${options.file.name} uploaded successfully`)
     options.onSuccess("Ok");
   }
-
 
   const props = {
     beforeUpload: file => {
@@ -39,12 +38,18 @@ const UploadForm = () => {
   };
 
   return (
-    <Upload
-      customRequest={resultRequest}
-      {...props}>
-      <Button icon={<UploadOutlined />}>Upload text file only</Button>
-      {/* <a href='/somefile.txt' download>Click to download</a> */}
-    </Upload>
+    <>
+      <h1>Spell check</h1>
+      <p>Upload your text file to check</p>
+      <Dragger
+        customRequest={resultRequest}
+        {...props}>
+        <p className="ant-upload-drag-icon">
+          <InboxOutlined />
+        </p>
+        <p className="ant-upload-text">Click or drag text file to this area to upload</p>
+      </Dragger>
+    </>
   );
 };
 

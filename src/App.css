@@ -49,6 +49,10 @@
   padding-bottom : 50px;
 }
 
+.ant-upload.ant-upload-drag .ant-upload {
+  padding: 16px 16px;
+}
+
 @media screen and (max-width: 480px) {
   .App {
     background: white;
