@@ -1,72 +1,69 @@
 import http from 'http';
 import formidable from 'formidable';
-import fs from 'fs'
-import SpellChecker from './service'
-import EventEmitter from 'events';
-import { writeFile } from 'fs';
+import { apiSpell } from './apiSpell'
+import { Writable } from 'node:stream';
 
 //options
-const highWaterMark = 3 * 512
-const encoding = 'utf-8'
 const PORT = 5000
-const emitter = new EventEmitter()
-const form = formidable();
+// const emitter = new EventEmitter()
+let chunks = [] as Array<String>;
+
+const streamFromFile = {
+  fileWriteStreamHandler: (/* file */) => {
+    const writable = new Writable();
+    writable._write = async (chunk, enc, next) => {
+      const response = await apiSpell(chunk.toString())
+      chunks = chunks.concat(response);
+      console.log('iteration', chunk.toString().length);
+      next();
+    };
+    return writable;
+  }
+}
+
+const filterType = {
+  filter: function ({ mimetype }: any) {
+    // keep only text
+    return mimetype && mimetype.includes("text");
+  }
+}
+
+const form = formidable({
+  maxFileSize: 50 * 1024 * 1024,
+  encoding: 'utf-8',
+  ...filterType,
+  ...streamFromFile
+});
 
 const server = http.createServer((req, res) => {
   //CORS
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "OPTIONS, POST, GET",
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Content-Length, X-Requested-With',
-  };
-  if (req.method === "OPTIONS") {
-    res.writeHead(204, headers);
-    res.end();
-    return;
+    'Access-Control-Allow-Headers': 'Content-Type, Content-Length, X-Requested-With'
   }
+  if (req.method === "OPTIONS") {
+    res.writeHead(204, headers)
+    res.end()
+    return
+  }
+
+  //upload file route
   if (req.url === '/api/upload' && req.method?.toLowerCase() === 'post') {
     // parse a file upload
-    form.on('file', async function (name, file) {
-      if (file.mimetype !== 'text/plain') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify('error type'));
-      }
-      //create readeble stream from text file
-      const stream = fs.createReadStream(file.filepath, { encoding, highWaterMark })
-      let chunks = [] as Array<String>;
-      //every chunc check spell
-      for await (const chunk of stream) {
-        const response = await SpellChecker.sendChankText(chunk.toString())
-        chunks = chunks.concat(response);
-        // console.log('iteration');
-      }
-      //save new text in file and emmit action
-      writeFile('files/final.txt', chunks.join(), 'utf8', (err) => {
-        if (err) throw err;
-        emitter.emit('upload');
-      });
-
-      stream.on('error', (e) => {
-        console.log(e);
-      })
-    })
-
-    form.parse(req, (err, fields, files) => {
+    form.once('end', () => {
+      console.log('-> post done from "end" event');
+      res.writeHead(200, { 'Content-Type': 'text/plain' });
+      res.end(chunks.join());
+      chunks = []
+    });
+    form.parse(req, (err, fieldsMultiple, files) => {
       if (err) {
         res.writeHead(err.httpCode || 400, { 'Content-Type': 'text/plain' });
         res.end(String(err));
+        console.log(err);
         return;
       }
-      emitter.once('upload', () => {
-        const filePath = 'files/final.txt'
-        if (fs.existsSync(filePath)) {
-          res.writeHead(200, headers);
-          fs.createReadStream('files/final.txt').pipe(res)
-          return
-        }
-        res.writeHead(200, headers);
-        res.end('Error sending file');
-      });
     });
   }
   else { res.end() }
