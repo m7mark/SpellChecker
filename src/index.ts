@@ -53,13 +53,13 @@ const server = http.createServer((req, res) => {
     // parse a file upload
     form.once('end', () => {
       console.log('-> post done from "end" event');
-      res.writeHead(200, { 'Content-Type': 'text/plain' });
+      res.writeHead(200, { 'Content-Type': 'text/plain', ...headers });
       res.end(chunks.join());
       chunks = []
     });
     form.parse(req, (err, fieldsMultiple, files) => {
       if (err) {
-        res.writeHead(err.httpCode || 400, { 'Content-Type': 'text/plain' });
+        res.writeHead(err.httpCode || 400, { 'Content-Type': 'text/plain', ...headers });
         res.end(String(err));
         console.log(err);
         return;
